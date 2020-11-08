@@ -7,10 +7,10 @@
 \method{terms}{data.frame}(x, type = c("tokens", "biterms"), window = 15, ...)
 }
 \arguments{
-\item{x}{a tokenised data frame containing one row per token with 2 columns 
+\item{x}{a tokenised data frame containing one row per token with 2 columns
 \itemize{
 \item the first column is a context identifier (e.g. a tweet id, a document id, a sentence id, an identifier of a survey answer, an identifier of a part of a text)
-\item the second column is a column called of type character containing the sequence of words occurring within the context identifier 
+\item the second column is a column called of type character containing the sequence of words occurring within the context identifier
 }}
 
 \item{type}{a character string, either 'tokens' or 'biterms'. Defaults to 'tokens'.}
@@ -22,17 +22,17 @@
 \value{
 Depending if type is set to 'tokens' or 'biterms' the following is returned:
 \itemize{
-\item{If \code{type='tokens'}: }{a list containing 2 elements: 
+\item{If \code{type='tokens'}: }{a list containing 2 elements:
 \itemize{
 \item \code{n} which indicates the number of tokens
-\item \code{tokens} which is a data.frame with columns id, token and freq, 
+\item \code{tokens} which is a data.frame with columns id, token and freq,
 indicating for all tokens found in the data the frequency of occurrence
 }
 }
-\item{If \code{type='biterms'}: }{a list containing 2 elements: 
+\item{If \code{type='biterms'}: }{a list containing 2 elements:
 \itemize{
 \item \code{n} which indicates the number of biterms used to train the model
-\item \code{biterms} which is a data.frame with columns term1 and term2, 
+\item \code{biterms} which is a data.frame with columns term1 and term2,
 indicating all biterms found in the data. The same biterm combination can occur several times.
 }
 Note that a biterm is unordered, in the output of \code{type='biterms'} term1 is always smaller than or equal to term2.}
@@ -43,6 +43,7 @@ This extracts words occurring in the neighbourhood of one another, within a cert
 The default setting provides the biterms used when fitting \code{\link{BTM}} with the default window parameter.
 }
 \examples{
+\dontrun{
 \dontshow{if(require(udpipe))\{}
 library(udpipe)
 data("brussels_reviews_anno", package = "udpipe")
@@ -54,6 +55,7 @@ str(biterms)
 tokens <- terms(x, type = "tokens")
 str(tokens)
 \dontshow{\} # End of main if statement running only if the required packages are installed}
+}
 }
 \seealso{
 \code{\link{BTM}}, \code{\link{predict.BTM}}, \code{\link{logLik.BTM}}

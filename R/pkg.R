@@ -2,5 +2,3 @@
 #' @importFrom utils head
 #' @useDynLib BTM
 NULL
-
-

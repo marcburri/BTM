@@ -20,13 +20,13 @@
 \value{
 Depending if type is set to 'tokens' or 'biterms' the following is returned:
 \itemize{
-\item{If \code{type='tokens'}: }{Get the probability of the token given the topic P(w|z). 
+\item{If \code{type='tokens'}: }{Get the probability of the token given the topic P(w|z).
 It returns a list of data.frames (one for each topic) where each data.frame contains columns token and probability ordered from high to low.
 The list is the same length as the number of topics.}
-\item{If \code{type='biterms'}: }{a list containing 2 elements: 
+\item{If \code{type='biterms'}: }{a list containing 2 elements:
 \itemize{
 \item \code{n} which indicates the number of biterms used to train the model
-\item \code{biterms} which is a data.frame with columns term1, term2 and topic, 
+\item \code{biterms} which is a data.frame with columns term1, term2 and topic,
 indicating for all biterms found in the data the topic to which the biterm is assigned to
 }
 Note that a biterm is unordered, in the output of \code{type='biterms'} term1 is always smaller than or equal to term2.}
@@ -36,6 +36,7 @@ Note that a biterm is unordered, in the output of \code{type='biterms'} term1 is
 Get highest token probabilities for each topic or get biterms used in the model
 }
 \examples{
+\dontrun{
 \dontshow{if(require(udpipe))\{}
 library(udpipe)
 data("brussels_reviews_anno", package = "udpipe")
@@ -49,6 +50,7 @@ terms(model, threshold = 0.01, top_n = +Inf)
 bi <- terms(model, type = "biterms")
 str(bi)
 \dontshow{\} # End of main if statement running only if the required packages are installed}
+}
 }
 \seealso{
 \code{\link{BTM}}, \code{\link{predict.BTM}}, \code{\link{logLik.BTM}}

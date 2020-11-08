@@ -9,7 +9,7 @@
 \arguments{
 \item{object}{an object of class BTM as returned by \code{\link{BTM}}}
 
-\item{data}{a data.frame with 2 columns term1 and term2 containing biterms. Defaults to the 
+\item{data}{a data.frame with 2 columns term1 and term2 containing biterms. Defaults to the
 biterms used to construct the model.}
 
 \item{...}{other arguments not used}
@@ -19,13 +19,14 @@ a list with elements
 \itemize{
 \item likelihood: a vector with the same number of rows as \code{data} containing the likelihood
 of the biterms alongside the BTM model. Calculated as \code{sum(phi[term1, ] * phi[term2, ] * theta)}.
-\item \code{ll} the sum of the log of the biterm likelihoods 
+\item \code{ll} the sum of the log of the biterm likelihoods
 }
 }
 \description{
 Get the likelihood how good biterms are fit by the BTM model
 }
 \examples{
+\dontrun{
 \dontshow{if(require(udpipe))\{}
 library(udpipe)
 data("brussels_reviews_anno", package = "udpipe")
@@ -37,6 +38,7 @@ model  <- BTM(x, k = 5, iter = 5, trace = TRUE, detailed = TRUE)
 fit <- logLik(model)
 fit$ll
 \dontshow{\} # End of main if statement running only if the required packages are installed}
+}
 }
 \seealso{
 \code{\link{BTM}}, \code{\link{predict.BTM}}, \code{\link{terms.BTM}}

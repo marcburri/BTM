@@ -9,14 +9,14 @@
 \arguments{
 \item{object}{an object of class BTM as returned by \code{\link{BTM}}}
 
-\item{newdata}{a tokenised data frame containing one row per token with 2 columns 
+\item{newdata}{a tokenised data frame containing one row per token with 2 columns
 \itemize{
 \item the first column is a context identifier (e.g. a tweet id, a document id, a sentence id, an identifier of a survey answer, an identifier of a part of a text)
-\item the second column is a column called of type character containing the sequence of words occurring within the context identifier 
+\item the second column is a column called of type character containing the sequence of words occurring within the context identifier
 }}
 
-\item{type}{character string with the type of prediction. 
-Either one of 'sum_b', 'sub_w' or 'mix'. Default is set to 'sum_b' as indicated in the paper, 
+\item{type}{character string with the type of prediction.
+Either one of 'sum_b', 'sub_w' or 'mix'. Default is set to 'sum_b' as indicated in the paper,
 indicating to sum over the the expectation of the topic proportions of biterms generated from the document. For the other approaches, please inspect the paper.}
 
 \item{...}{not used}
@@ -24,16 +24,17 @@ indicating to sum over the the expectation of the topic proportions of biterms g
 \value{
 a matrix containing containing P(z|d) - the probability of the topic given the biterms.\cr
 The matrix has one row for each unique doc_id (context identifier)
-which contains words part of the dictionary of the BTM model and has K columns, 
+which contains words part of the dictionary of the BTM model and has K columns,
 one for each topic.
 }
 \description{
 Classify new text alongside the biterm topic model.\cr
 
-To infer the topics in a document, it is assumed that the topic proportions of a document 
+To infer the topics in a document, it is assumed that the topic proportions of a document
 is driven by the expectation of the topic proportions of biterms generated from the document.
 }
 \examples{
+\dontrun{
 \dontshow{if(require(udpipe))\{}
 library(udpipe)
 data("brussels_reviews_anno", package = "udpipe")
@@ -46,6 +47,7 @@ scores <- predict(model, newdata = x, type = "sub_w")
 scores <- predict(model, newdata = x, type = "mix")
 head(scores)
 \dontshow{\} # End of main if statement running only if the required packages are installed}
+}
 }
 \references{
 Xiaohui Yan, Jiafeng Guo, Yanyan Lan, Xueqi Cheng. A Biterm Topic Model For Short Text. WWW2013,

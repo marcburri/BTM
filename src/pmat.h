@@ -4,7 +4,6 @@
  *  Created on: 2012-7-31
  *      Author: xhcloud@gmail.com
  */
-#include <Rcpp.h>
 #ifndef _PMAT_H
 #define _PMAT_H
 
@@ -18,13 +17,12 @@
 #include <sstream>
 #include <exception>
 #include <ctime>
+#include <Rcpp.h>
 
 #include "pvec.h"
 
-/*
 #define EXIT_ERR(s1, s2) {printf("[Error] %s%s\n", s1, s2);	\
 	exit(EXIT_FAILURE);}
-*/
 
 using namespace std;
 
@@ -92,9 +90,9 @@ public:
   // dimensions of the matrix are determinated by input data
   void load(const string& inf) {
 	ifstream rf(inf.c_str());
-	if (!rf) 
-	  Rcpp::stop("file not find:", inf.c_str());
-  
+	if (!rf)
+	  EXIT_ERR("file not find:", inf.c_str());
+
 	loadFileStream(rf);
   }
 
@@ -110,9 +108,9 @@ public:
   // load a transpose matrix
   void load_tmat(const string& inf) {
 	ifstream rf(inf.c_str());
-	if (!rf) 
-	  Rcpp::stop("file not find:", inf.c_str());
-  
+	if (!rf)
+	  EXIT_ERR("file not find:", inf.c_str());
+
 	try {
 	  string line;
 	  while (getline(rf, line)) {
@@ -122,16 +120,16 @@ public:
 	  }
 	}
 	catch (...) {
-	  Rcpp::stop("Err file:", inf.c_str());
+	  EXIT_ERR("Err file:", inf.c_str());
 	}
   }
-  
+
   const int rows() const {return array.size();}
   const int size() const {return rows();}
   const int cols() const {return rows()?array[0].size():0;}
 
   Pvec<T> &operator[] (int m){
-	if (m >= (int)array.size())
+	if (m >= array.size())
 	  Rcpp::Rcout << "ERR Row(i):" << m << ' ' << array.size() << endl;
 	return array[m];
   }
@@ -230,7 +228,7 @@ public:
 
   void add_row(const Pvec<T>& v) {array.push_back(v);}
   void push_back(const Pvec<T>& v) {array.push_back(v);}
-  
+
   void add_col(const Pvec<T>& v) {
 	if (array.size() == 0)
 	  array.resize(v.size());
@@ -261,7 +259,7 @@ public:
 	  s += array[i].sum();
 	return s;
   }
-  
+
   Pvec<T> rowSum() {
 	Pvec<T> s(array.size());
 	for (int i = 0 ; i < rows() ; ++i)
@@ -281,7 +279,7 @@ public:
   void normalize() {
 	double eps = 1e-30;
 	double smoother = eps * rows() * cols();
-  
+
 	T s = this->sum();
 	for (int i=0 ; i<rows() ; ++i)
 	  for (int j=0; j<cols() ; ++j)
@@ -298,9 +296,9 @@ public:
   void normc(double c = 0.0) {
 	for (int j = 0; j < cols() ; ++j) {
 	  T s=0;
-	  for (int i = 0; i < rows(); ++i) 
+	  for (int i = 0; i < rows(); ++i)
 		s += array[i][j] + c;
-	
+
 	  for (int i = 0; i < rows() ; ++i)
 		array[i][j] = (array[i][j] + c)/s;
 	}
@@ -310,7 +308,7 @@ public:
 	for (int i=0; i<rows(); ++i)
 	  array[i].add1_log();
   }
-  
+
   Pmat<T> transpose() const {
 	int N = rows();
 	int M = cols();
@@ -330,7 +328,7 @@ public:
   string str() {
 	ostringstream os;
 	int i;
-	for (i=0; i<rows(); ++i) 
+	for (i=0; i<rows(); ++i)
 	  os << array[i].str() << endl;
 
 	return os.str();
@@ -340,12 +338,12 @@ public:
 	ofstream wf(pt.c_str());
 	if (!wf) {
 	  Rcpp::Rcout << "Path not exists:" << pt << endl;
-	  Rcpp::stop(pt);
+	  exit(-1);
 	}
-  
-	for (int i=0; i<rows(); ++i) 
+
+	for (int i=0; i<rows(); ++i)
 	  wf << array[i].str() << endl;
   }
 };
-	
+
 #endif
