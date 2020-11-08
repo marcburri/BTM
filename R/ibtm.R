@@ -1,12 +1,9 @@
 
-
-
-
-
+#' @export
 IBTM <- function(data, k = 5, a = 50/k, b = 0.01, iter = 1000, window = 15, lam = 1, n_part = 10, trace = FALSE,
                  biterms, detailed = FALSE){
   trace <- as.integer(trace)
-  n_part <- as.integer(n_part-1)
+  n_part <- as.integer(n_part)
   lam <- as.integer(lam)
   stopifnot(k >= 1)
   stopifnot(iter >= 1)

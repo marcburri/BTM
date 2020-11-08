@@ -178,8 +178,4 @@ topicterms
 ```
 
 
-## Support in text mining
-
-Need support in text mining?
-Contact BNOSAC: http://www.bnosac.be
 
