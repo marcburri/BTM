@@ -7,6 +7,8 @@
 #include "str_util.h"
 #include "infer.h"
 
+
+
 void Infer::run(string docs_pt, string dir) {
   string model_dir = dir + "k" + str_util::itos(K)  + ".";
   load_para(model_dir);

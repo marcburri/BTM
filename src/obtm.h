@@ -51,7 +51,8 @@ public:
   Rcpp::NumericVector to_nvec(Pvec<double>  s);
   Rcpp::NumericMatrix to_nmat(Pmat<double>  s);
   void load_docs(string dfile);
-  void proc_day(string pt);
+  void proc_part(string pt);
+  double loglik();
 
   void prepare_part();
 

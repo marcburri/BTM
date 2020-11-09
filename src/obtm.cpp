@@ -94,13 +94,13 @@ void OBTM::run(string input_dir, int n_day, string res_dir) {
 	if (d != 0)
 	 prepare_part();
 	string pt = input_dir + str_util::itos(d) + ".txt";
-	proc_day(pt);
+	proc_part(pt); 
 	string dir = res_dir + "k" + str_util::itos(K) + ".day" + str_util::itos(d) + ".";
 	save_res(dir);
   }
 }
 
-void OBTM::proc_day(string pt) {
+void OBTM::proc_part(string pt) {
   // Load biterms in current day
   load_docs(pt);
   // initalize topic assignments
@@ -241,3 +241,35 @@ void OBTM::save_pw_z(string pt) {
   pw_z.normr();
   pw_z.write(pt);
 }
+
+// p(z|d) = \sum_b{ p(z|b)p(b|d) }
+double OBTM::loglik() {
+  Pvec<double> pz;
+  pz.resize(K);
+  for (int k = 0; k < K; k++){
+    pz[k] = (nb_z[k] + alpha[k]);
+  }
+  pz.normalize();
+  
+  Pmat<double> pw_z;
+  pw_z = nwz.toDouble() + beta;
+  pw_z.normr();
+  Pvec<double> lik_k(K);
+  double lik = 1;
+    for (int b = 0; b < bs.size(); ++b) {
+      int w1 = bs[b].get_wi();
+      int w2 = bs[b].get_wj();
+      
+      for (int k = 0; k < K; ++k) {
+        lik_k[k] += pw_z[k][w1] * pw_z[k][w2] * pz[k] ;
+      }
+    }
+    for (int k = 0; k < K; ++k) {
+      lik *= lik_k[k] ;
+    }
+    double loglik;
+    loglik = log(lik);
+  return loglik;
+}
+
+

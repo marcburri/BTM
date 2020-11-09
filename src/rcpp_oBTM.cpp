@@ -15,7 +15,7 @@
 using namespace std;
 
 // [[Rcpp::export]]
-SEXP obtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, double b, int iter, int win = 15, double lam = 1, int n_part = 10,int trace = 0) {
+SEXP obtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, double b, int iter, int win = 15, double lam = 1, int n_part = 10,int trace = 0, int check_convergence = 0, double convergence_tol = 0.001) {
   Rcpp::Function format_posixct("format.POSIXct");
   Rcpp::Function sys_time("Sys.time");
   int biterms_size = biterms.size();
@@ -47,7 +47,7 @@ SEXP obtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, d
       // prepare the Dirichlet priors
       obtm->prepare_part();
     }
-    Rcpp::Rcout << "indexl " << arrl[d] <<  "indexu " << arru[d] << endl;
+    Rcpp::Rcout << "Processing from doc " << arrl[d] <<  " to " << arru[d] << endl;
        for (int idx = arrl[d]; idx < arru[d]; idx++){
         line = Rcpp::as<std::string>(x[idx]);
         context_id = Rcpp::as<std::string>(doc_ids[idx]);
@@ -78,6 +78,8 @@ SEXP obtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, d
       //   int k = Sampler::uni_sample(K);
       //   obtm->assign_biterm_topic(*b, k);
       // }
+      double inf = std::numeric_limits<double>::infinity();
+      double loglik_old = -inf;
       for (int it = 1; it < iter + 1; ++it) {
         if(trace > 0){
           if ((it) % trace == 0){
@@ -87,7 +89,19 @@ SEXP obtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, d
         for (unsigned int b = 0; b < obtm->bs.size(); ++b) {
            obtm->update_biterm(obtm->bs[b]);
         }
-         // Rcpp::checkUserInterrupt();
+        if(check_convergence > 0){
+          if ((it) % check_convergence == 0){
+            double loglik = obtm -> loglik();
+            Rcpp::Rcout << " Loglik: " <<  loglik << endl;
+            if (loglik_old/loglik - 1 < convergence_tol) {
+              Rcpp::Rcout << " Achieved convergence after " << it << "/" << iter << " iterations " << endl;
+              break;
+            }
+            loglik_old = loglik;
+          }
+        }
+        
+         Rcpp::checkUserInterrupt();
       }
     }
   // p(z) is determinated by the overall proportions
@@ -113,7 +127,7 @@ SEXP obtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, d
       }
     }
 
-    Rcpp::Rcout << "n(biterms)=" << obtm->bs.size() << endl;
+ // Rcpp::Rcout << "n(biterms)=" << obtm->bs.size() << endl;
 
   Rcpp::List out = Rcpp::List::create(
     Rcpp::Named("OBTM") = obtm,
