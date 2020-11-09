@@ -326,7 +326,7 @@ terms.BTM <- function(x, type = c("tokens", "biterms"), threshold = 0, top_n = 5
   if(type %in% "biterms"){
     from         <- seq_along(rownames(x$phi))
     to           <- rownames(x$phi)
-    bit <- btm_biterms(x$Model)
+    bit <- btm_biterms(x$OBTM)
     bit$biterms$term1 <- to[match(bit$biterms$term1, from)]
     bit$biterms$term2 <- to[match(bit$biterms$term2, from)]
     bit$biterms <- data.frame(term1 = bit$biterms$term1,

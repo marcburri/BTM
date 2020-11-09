@@ -17,8 +17,8 @@ btm_biterms_text <- function(x, W, win = 15L) {
     .Call('_BTM_btm_biterms_text', PACKAGE = 'BTM', x, W, win)
 }
 
-obtm <- function(biterms, x, K, W, a, b, iter, win = 15L, lam = 1, n_part = 10L, trace = 0L, check_convergence = 0L, convergence_tol = 0.001) {
-    .Call('_BTM_obtm', PACKAGE = 'BTM', biterms, x, K, W, a, b, iter, win, lam, n_part, trace, check_convergence, convergence_tol)
+obtm <- function(biterms, x, K, W, a, b, iter, win = 15L, lam = 1, n_part = 10L, trace = 0L, check_convergence = 0L, convergence_tol = 0.001, background = FALSE) {
+    .Call('_BTM_obtm', PACKAGE = 'BTM', biterms, x, K, W, a, b, iter, win, lam, n_part, trace, check_convergence, convergence_tol, background)
 }
 
 obtm_infer <- function(OBTM, x, type) {
