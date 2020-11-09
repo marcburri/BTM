@@ -15,10 +15,11 @@
 using namespace std;
 
 // [[Rcpp::export]]
-SEXP obtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, double b, int iter, int win = 15, double lam = 1, int n_part = 10,int trace = 0, int check_convergence = 0, double convergence_tol = 0.001) {
+SEXP obtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, double b, int iter, int win = 15, double lam = 1, int n_part = 10,int trace = 0, int check_convergence = 0, double convergence_tol = 0.001, bool background = false) {
   Rcpp::Function format_posixct("format.POSIXct");
   Rcpp::Function sys_time("Sys.time");
   int biterms_size = biterms.size();
+  bool has_background = background;
   Rcpp::CharacterVector doc_ids = x.attr("names");
   std::string context_id;
   Rcpp::List context_id_biterm;
@@ -26,7 +27,7 @@ SEXP obtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, d
   Rcpp::IntegerVector term2;
   Rcpp::IntegerVector cooc;
 
-  Rcpp::XPtr<OBTM> obtm(new OBTM(K, W, a, b, iter, lam), true);
+  Rcpp::XPtr<OBTM> obtm(new OBTM(K, W, a, b, iter, lam, has_background), true);
   std::string line;
 
 
@@ -83,7 +84,7 @@ SEXP obtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, d
       for (int it = 1; it < iter + 1; ++it) {
         if(trace > 0){
           if ((it) % trace == 0){
-            Rcpp::Rcout << Rcpp::as<std::string>(format_posixct(sys_time())) << " Start Gibbs sampling iteration " << it << "/" << iter << endl;
+            Rcpp::Rcout << Rcpp::as<std::string>(format_posixct(sys_time())) << " End of GS iteration " << it << "/" << iter << endl;
           }
         }
         for (unsigned int b = 0; b < obtm->bs.size(); ++b) {
@@ -103,6 +104,13 @@ SEXP obtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, d
         
          Rcpp::checkUserInterrupt();
       }
+      
+      
+      
+      
+      
+      
+      
     }
   // p(z) is determinated by the overall proportions
   // of biterms in it

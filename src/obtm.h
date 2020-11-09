@@ -32,12 +32,17 @@ public:
   Pmat<int> nwz;	    // n(w,z), size M*K
 
   vector<Biterm> bs;  // training biterms
+  
+  bool has_background; 
+  
+  Pvec<double> pw_b;   // the background word distribution  
 
 public:
-  OBTM(int K, int W, double a, double b, int n_iter, double l):
-  K(K), W(W), n_iter(n_iter), lam(l) {
+  OBTM(int K, int W, double a, double b, int n_iter, double l, bool has_b = false):
+  K(K), W(W), n_iter(n_iter), lam(l), has_background(has_b) {
     alpha.resize(K, a);
     beta.resize(K, W, b);
+    pw_b.resize(W);
     beta_sum = beta.rowSum();
     nb_z.resize(K);
     nwz.resize(K, W);
