@@ -130,7 +130,8 @@
 #'   term.frequency = model$vocabulary$freq)
 #' serVis(json)
 #' }
-BTM <- function(data, k = 5, alpha = 50/k, beta = 0.01, iter = 1000, window = 15, background = FALSE, trace = FALSE,
+BTM <- function(data, k = 5, alpha = 50/k, beta = 0.01, iter = 1000, 
+                window = 15, background = FALSE, trace = FALSE,
                 biterms, detailed = FALSE){
   trace <- as.integer(trace)
   background <- as.integer(as.logical(background))

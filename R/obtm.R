@@ -1,8 +1,10 @@
 #' @export
-OBTM <- function(data, k = 5, a = 50/k, b = 0.01, iter = 1000, window = 15, lam = 1, n_part = 10, trace = FALSE,
-                 biterms, detailed = FALSE){
+OBTM <- function(data, k = 5, a = 50/k, b = 0.01, iter = 1000, 
+                 window = 15, lam = 1, n_part = 10, trace = FALSE,
+                 biterms, detailed = FALSE, check_convergence=0, 
+                 convergence_tol=1e-5, background=FALSE){
   trace <- as.integer(trace)
-  n_part <- as.integer(n_part-1)
+  n_part <- as.integer(n_part)
   lam <- as.integer(lam)
   stopifnot(k >= 1)
   stopifnot(iter >= 1)
@@ -71,7 +73,20 @@ OBTM <- function(data, k = 5, a = 50/k, b = 0.01, iter = 1000, window = 15, lam 
   }
 
   ## build the model
-  model <- obtm(biterms = biterms, x = context, K = k, W = voc, a = a, b = b, iter = iter, win = window, lam = lam, n_part = n_part, trace = as.integer(trace))
+  model <- obtm(biterms = biterms, 
+                x = context, 
+                K = k, 
+                W = voc, 
+                a = a, 
+                b = b, 
+                iter = iter, 
+                win = window, 
+                lam = lam, 
+                n_part = n_part, 
+                trace = as.integer(trace),
+                check_convergence = check_convergence,
+                convergence_tol = convergence_tol,
+                background = background)
   ## make sure integer numbers are back tokens again
   rownames(model$phi) <- vocabulary$token
   ## also include vocabulary
