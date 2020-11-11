@@ -1,0 +1,155 @@
+#include <Rcpp.h>
+#include <cstdlib>
+#include <string.h>
+#include <string>
+#include <cstdlib>
+#include <iostream>
+#include <ctime>
+#include "sampler.h"
+
+
+#include "ibtm.h"
+#include "infer.h"
+
+
+using namespace std;
+
+// [[Rcpp::export]]
+SEXP ibtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, double b, int iter, int win = 15, int n_rej = 20, int trace = 0, int check_convergence = 0, double convergence_tol = 0.001, bool background = false) {
+  Rcpp::Function format_posixct("format.POSIXct");
+  Rcpp::Function sys_time("Sys.time");
+  int biterms_size = biterms.size();
+  bool has_background = background;
+  Rcpp::CharacterVector doc_ids = x.attr("names");
+  std::string context_id;
+  Rcpp::List context_id_biterm;
+  Rcpp::IntegerVector term1;
+  Rcpp::IntegerVector term2;
+  Rcpp::IntegerVector cooc;
+  
+  Rcpp::XPtr<IBTM> ibtm(new IBTM(K, W, a, b, win, n_rej, has_background), true);
+  std::string line;
+  
+  for (int idx = 0; idx < x.size(); idx++){ 
+      line = Rcpp::as<std::string>(x[idx]);
+      context_id = Rcpp::as<std::string>(doc_ids[idx]);
+      Doc doc(line);
+      if(biterms_size > 0){
+        context_id_biterm = Rcpp::as<Rcpp::List>(biterms(context_id));
+        term1 = context_id_biterm["term1"];
+        term2 = context_id_biterm["term2"];
+        cooc = context_id_biterm["cooc"];
+        for (int j = 0; j < term1.size(); j++){
+          if(cooc.length() > 0){
+            for (int nr = 0; nr < cooc[j]; nr++){
+              ibtm->bs.push_back( Biterm(term1[j], term2[j]) );
+            }
+          }else{
+            ibtm->bs.push_back( Biterm(term1[j], term2[j]) );
+          }
+        }
+      }else{
+        // gen biterms
+        doc.gen_biterms(ibtm->bs, win);
+      }
+      for (int i = 0; i < doc.size(); ++i) {
+        int w = doc.get_w(i);
+        // the background word distribution
+        ibtm->pw_b[w] += 1;
+      }
+      // Rcpp::Rcout << "n(biterms)=" << ibtm->bs.size() << endl;
+    }
+    ibtm->pw_b.normalize();
+    // ibtm->model_init(); 
+    // init model
+    // for (vector<Biterm>::iterator b = ibtm->bs.begin(); b != ibtm->bs.end(); ++b) {
+    //   int k = Sampler::uni_sample(K);
+    //   ibtm->assign_biterm_topic(*b, k);
+    // }
+    double inf = std::numeric_limits<double>::infinity();
+    double loglik_old = -inf;
+    for (int it = 1; it < iter + 1; ++it) {
+      if(trace > 0){
+        if ((it) % trace == 0){
+          Rcpp::Rcout << Rcpp::as<std::string>(format_posixct(sys_time())) << " End of GS iteration " << it << "/" << iter << endl;
+        }
+      }
+      for (unsigned int b = 0; b < ibtm->bs.size(); ++b) {
+        ibtm->update_biterm(ibtm->bs[b]);
+      }
+      if(check_convergence > 0){
+        if ((it) % check_convergence == 0){
+          double loglik = ibtm -> loglik();
+          Rcpp::Rcout << " Loglik: " <<  loglik << endl;
+          if (loglik_old/loglik - 1 < convergence_tol) {
+            Rcpp::Rcout << " Achieved convergence after " << it << "/" << iter << " iterations " << endl;
+            break;
+          }
+          loglik_old = loglik;
+        }
+      }
+      
+      Rcpp::checkUserInterrupt();
+    }
+    
+  // p(z) is determinated by the overall proportions
+  // of biterms in it
+  Pvec<double> pz(K);	          // p(z) = theta
+  for (int k = 0; k < K; k++){
+    pz[k] = (ibtm->nb_z[k] + ibtm->alpha);
+  }
+  pz.normalize();
+  
+  std::vector<double> p_z;
+  for (unsigned int i = 0; i < pz.size(); ++i){
+    p_z.push_back(pz[i]);
+  }
+  
+  Pmat<double> pw_z = ibtm->nwz.toDouble() + ibtm->beta;   // p(w|z) = phi, size K * M
+  pw_z.normr();
+  
+  Rcpp::NumericMatrix pwz(pw_z.cols(), pw_z.rows());
+  for (int m = 0; m < pw_z.rows(); ++m) {
+    for (int n = 0; n < pw_z.cols(); ++n) {
+      pwz(n, m) = pw_z[m][n];
+    }
+  }
+  
+  // Rcpp::Rcout << "n(biterms)=" << ibtm->bs.size() << endl;
+  
+  Rcpp::List out = Rcpp::List::create(
+    Rcpp::Named("model") = ibtm,
+    Rcpp::Named("K") = K,
+    Rcpp::Named("W") = W,
+    Rcpp::Named("alpha") = a,
+    Rcpp::Named("beta") = b,
+    Rcpp::Named("iter") = iter,
+    Rcpp::Named("theta") = p_z,
+    Rcpp::Named("phi") = pwz
+  );
+  return out;
+}
+
+// [[Rcpp::export]]
+Rcpp::List ibtm_biterms(SEXP model) {
+  Rcpp::XPtr<IBTM> ibtm(model);
+  unsigned int nr_biterms = ibtm->bs.size();
+  std::vector<int> term1;
+  std::vector<int> term2;
+  std::vector<int> topic;
+  for (unsigned int i = 0; i < nr_biterms; i++){
+    term1.push_back(ibtm->bs[i].get_wi() + 1);
+    term2.push_back(ibtm->bs[i].get_wj() + 1);
+    topic.push_back(ibtm->bs[i].get_z() + 1);
+  }
+  Rcpp::List out = Rcpp::List::create(
+    Rcpp::Named("n") = nr_biterms,
+    Rcpp::Named("biterms") = Rcpp::List::create(
+      Rcpp::Named("term1") = term1,
+      Rcpp::Named("term2") = term2,
+      Rcpp::Named("topic") = topic
+    )
+  );
+  return out;
+}
+

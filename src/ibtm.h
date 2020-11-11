@@ -16,7 +16,7 @@
 using namespace std;
 
 class IBTM {
-private:
+public:
   int K;				// topic number
   int W;				// vocabulary size
 
@@ -33,16 +33,27 @@ private:
 
   vector<Biterm> bs;  // training biterms
   
+  bool has_background; 
+  
+  Pvec<double> pw_b;   // the background word distribution  
+  
 public:
-  IBTM(int K, int W, double a, double b, int win, int n_rej);
+  IBTM(int K, int W, double a, double b, int win, int n_rej, bool has_b = false):
+  K(K), W(W), alpha(a), beta(b),
+  win(win), n_rej(n_rej), n_b(0) , has_background(has_b) {  
+    nb_z.resize(K);
+    nwz.resize(K, W);
+  }
+  
   
   void run(string input_dir, int n_day, string res_dir);
   
-  void proc_day(string pt);
+  void proc_part(string pt);
   
-private:
+// private:
   void proc_biterm(Biterm& bi);
   void gen_rej_idx(vector<int>& idxs);
+  double loglik();
 
   // update estimate of a biterm
   void update_biterm(Biterm& bi);

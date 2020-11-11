@@ -8,13 +8,6 @@
 #include "doc.h"
 #include "ibtm.h"
 
-IBTM::IBTM(int K, int W, double a, double b, int win, int n_rej):
-  K(K), W(W), alpha(a), beta(b),
-  win(win), n_rej(n_rej), n_b(0) {
-  nb_z.resize(K);
-  nwz.resize(K, W);
-}
-
 /**
  *   input_dir    contains docs orangnized by days start from 0,
  *                as day0.doc_wids, day1.day_wids, day2.day_wids, ...
@@ -25,14 +18,14 @@ void IBTM::run(string input_dir, int n_day, string res_dir) {
   for (int d = 0; d < n_day; ++d) {
 	Rcpp::Rcout << "----- proc day " << d << " ------" << endl;
 	string pt = input_dir + str_util::itos(d) + ".txt";
-	proc_day(pt);
+	proc_part(pt);
 	string dir = res_dir + "k" + str_util::itos(K) + ".day" + str_util::itos(d) + ".";
 	save_res(dir);
   }
 }
 
 
-void IBTM::proc_day(string pt) {
+void IBTM::proc_part(string pt) {
   Rcpp::Rcout << "load docs: " << pt << endl;
   ifstream rf(pt.c_str());
   if (!rf) {
@@ -170,3 +163,38 @@ void IBTM::save_pw_z(string pt) {
   pw_z.normr(beta);
   pw_z.write(pt);
 }
+
+double IBTM::loglik() { 
+  Pvec<double> pz;
+  pz.resize(K);
+  for (int k = 0; k < K; k++){
+    pz[k] = (nb_z[k] + alpha);
+  }
+  pz.normalize();
+  
+  Pmat<double> pw_z;
+  pw_z = nwz.toDouble() + beta;
+  pw_z.normr();
+  // Pvec<double> lik_k(bs.size());
+  double lik = 0;
+  for (int b = 0; b < bs.size(); ++b) {
+    double lik_k = 0;
+    int w1 = bs[b].get_wi();
+    int w2 = bs[b].get_wj();
+    
+    for (int k = 0; k < K; ++k) {
+      // lik_k[b] += pw_z[k][w1] * pw_z[k][w2] * pz[k] ;
+      lik_k += (pw_z[k][w1] * pw_z[k][w2] * pz[k] );
+    }
+    lik += log(lik_k);
+  }
+  // for (int k = 0; k < K; ++k) {
+  // for (int b = 0; b < bs.size(); ++b) {
+  //  lik += lik_k[b] ;
+  //}
+  double loglik;
+  loglik = lik;
+  return loglik;
+}
+
+

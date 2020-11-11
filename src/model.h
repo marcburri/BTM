@@ -55,6 +55,7 @@ public:
   // intialize memeber varibles and biterms
   void model_init();		// load from docs
   void load_docs(string docs_pt);
+  double loglik();
   
   // update estimate of a biterm
   void update_biterm(Biterm& bi);

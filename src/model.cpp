@@ -155,3 +155,38 @@ void Model::save_pw_z(string pt) {
 	wf << pw_z[k].str() << endl;
   }
 }
+
+double Model::loglik() { 
+  Pvec<double> pz;
+  pz.resize(K);
+  for (int k = 0; k < K; k++){
+    pz[k] = (nb_z[k] + alpha);
+  }
+  pz.normalize();
+  
+  Pmat<double> pw_z;
+  pw_z = nwz.toDouble() + beta;
+  pw_z.normr();
+  // Pvec<double> lik_k(bs.size());
+  double lik = 0;
+  for (int b = 0; b < bs.size(); ++b) {
+    double lik_k = 0;
+    int w1 = bs[b].get_wi();
+    int w2 = bs[b].get_wj();
+    
+    for (int k = 0; k < K; ++k) {
+      // lik_k[b] += pw_z[k][w1] * pw_z[k][w2] * pz[k] ;
+      lik_k += (pw_z[k][w1] * pw_z[k][w2] * pz[k] );
+    }
+    lik += log(lik_k);
+  }
+  // for (int k = 0; k < K; ++k) {
+  // for (int b = 0; b < bs.size(); ++b) {
+  //  lik += lik_k[b] ;
+  //}
+  double loglik;
+  loglik = lik;
+  return loglik;
+}
+
+

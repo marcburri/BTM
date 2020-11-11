@@ -13,7 +13,7 @@
 using namespace std;
 
 // [[Rcpp::export]]
-SEXP btm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double alpha, double beta, int iter, int win = 15, bool background = false, int trace = 0) {
+SEXP btm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double alpha, double beta, int iter, int win = 15, bool background = false, int trace = 0, int check_convergence = 0, double convergence_tol = 0.001) {
   Rcpp::Function format_posixct("format.POSIXct");
   Rcpp::Function sys_time("Sys.time");
   int save_step = 1;
@@ -58,6 +58,8 @@ SEXP btm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double alpha
   }
   model->pw_b.normalize();
   model->model_init();
+  double inf = std::numeric_limits<double>::infinity();
+  double loglik_old = -inf;
   for (int it = 1; it < iter + 1; ++it) {
     if(trace > 0){
       if ((it-1) % trace == 0){
@@ -66,6 +68,17 @@ SEXP btm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double alpha
     }
     for (unsigned int b = 0; b < model->bs.size(); ++b) {
       model->update_biterm(model->bs[b]);
+    }
+    if(check_convergence > 0){
+      if ((it) % check_convergence == 0){
+        double loglik = model -> loglik();
+        Rcpp::Rcout << " Loglik: " <<  loglik << endl;
+        if (loglik_old/loglik - 1 < convergence_tol) {
+          Rcpp::Rcout << " Achieved convergence after " << it << "/" << iter << " iterations " << endl;
+          break;
+        }
+        loglik_old = loglik;
+      }
     }
     Rcpp::checkUserInterrupt();
   }

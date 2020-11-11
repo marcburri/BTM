@@ -131,7 +131,8 @@
 #' serVis(json)
 #' }
 BTM <- function(data, k = 5, alpha = 50/k, beta = 0.01, iter = 1000, 
-                window = 15, background = FALSE, trace = FALSE,
+                window = 15, background = FALSE, trace = FALSE, 
+                check_convergence=0, convergence_tol=1e-5,
                 biterms, detailed = FALSE){
   trace <- as.integer(trace)
   background <- as.integer(as.logical(background))
@@ -202,7 +203,18 @@ BTM <- function(data, k = 5, alpha = 50/k, beta = 0.01, iter = 1000,
   }
 
   ## build the model
-  model <- btm(biterms = biterms, x = context, K = k, W = voc, alpha = alpha, beta = beta, iter = iter, win = window, background = background, trace = as.integer(trace))
+  model <- btm(biterms = biterms, 
+               x = context, 
+               K = k, 
+               W = voc, 
+               alpha = alpha, 
+               beta = beta, 
+               iter = iter, 
+               win = window, 
+               background = background, 
+               check_convergence = check_convergence,
+               convergence_tol = convergence_tol,
+               trace = as.integer(trace))
   ## make sure integer numbers are back tokens again
   rownames(model$phi) <- vocabulary$token
   ## also include vocabulary

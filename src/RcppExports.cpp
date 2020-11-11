@@ -6,8 +6,8 @@
 using namespace Rcpp;
 
 // btm
-SEXP btm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double alpha, double beta, int iter, int win, bool background, int trace);
-RcppExport SEXP _BTM_btm(SEXP bitermsSEXP, SEXP xSEXP, SEXP KSEXP, SEXP WSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP iterSEXP, SEXP winSEXP, SEXP backgroundSEXP, SEXP traceSEXP) {
+SEXP btm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double alpha, double beta, int iter, int win, bool background, int trace, int check_convergence, double convergence_tol);
+RcppExport SEXP _BTM_btm(SEXP bitermsSEXP, SEXP xSEXP, SEXP KSEXP, SEXP WSEXP, SEXP alphaSEXP, SEXP betaSEXP, SEXP iterSEXP, SEXP winSEXP, SEXP backgroundSEXP, SEXP traceSEXP, SEXP check_convergenceSEXP, SEXP convergence_tolSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -21,7 +21,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type win(winSEXP);
     Rcpp::traits::input_parameter< bool >::type background(backgroundSEXP);
     Rcpp::traits::input_parameter< int >::type trace(traceSEXP);
-    rcpp_result_gen = Rcpp::wrap(btm(biterms, x, K, W, alpha, beta, iter, win, background, trace));
+    Rcpp::traits::input_parameter< int >::type check_convergence(check_convergenceSEXP);
+    Rcpp::traits::input_parameter< double >::type convergence_tol(convergence_tolSEXP);
+    rcpp_result_gen = Rcpp::wrap(btm(biterms, x, K, W, alpha, beta, iter, win, background, trace, check_convergence, convergence_tol));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -62,6 +64,40 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// ibtm
+SEXP ibtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, double b, int iter, int win, int n_rej, int trace, int check_convergence, double convergence_tol, bool background);
+RcppExport SEXP _BTM_ibtm(SEXP bitermsSEXP, SEXP xSEXP, SEXP KSEXP, SEXP WSEXP, SEXP aSEXP, SEXP bSEXP, SEXP iterSEXP, SEXP winSEXP, SEXP n_rejSEXP, SEXP traceSEXP, SEXP check_convergenceSEXP, SEXP convergence_tolSEXP, SEXP backgroundSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type biterms(bitermsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    Rcpp::traits::input_parameter< int >::type W(WSEXP);
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< double >::type b(bSEXP);
+    Rcpp::traits::input_parameter< int >::type iter(iterSEXP);
+    Rcpp::traits::input_parameter< int >::type win(winSEXP);
+    Rcpp::traits::input_parameter< int >::type n_rej(n_rejSEXP);
+    Rcpp::traits::input_parameter< int >::type trace(traceSEXP);
+    Rcpp::traits::input_parameter< int >::type check_convergence(check_convergenceSEXP);
+    Rcpp::traits::input_parameter< double >::type convergence_tol(convergence_tolSEXP);
+    Rcpp::traits::input_parameter< bool >::type background(backgroundSEXP);
+    rcpp_result_gen = Rcpp::wrap(ibtm(biterms, x, K, W, a, b, iter, win, n_rej, trace, check_convergence, convergence_tol, background));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ibtm_biterms
+Rcpp::List ibtm_biterms(SEXP model);
+RcppExport SEXP _BTM_ibtm_biterms(SEXP modelSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type model(modelSEXP);
+    rcpp_result_gen = Rcpp::wrap(ibtm_biterms(model));
+    return rcpp_result_gen;
+END_RCPP
+}
 // obtm
 SEXP obtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, double b, int iter, int win, double lam, int n_part, int trace, int check_convergence, double convergence_tol, bool background);
 RcppExport SEXP _BTM_obtm(SEXP bitermsSEXP, SEXP xSEXP, SEXP KSEXP, SEXP WSEXP, SEXP aSEXP, SEXP bSEXP, SEXP iterSEXP, SEXP winSEXP, SEXP lamSEXP, SEXP n_partSEXP, SEXP traceSEXP, SEXP check_convergenceSEXP, SEXP convergence_tolSEXP, SEXP backgroundSEXP) {
@@ -99,10 +135,12 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_BTM_btm", (DL_FUNC) &_BTM_btm, 10},
+    {"_BTM_btm", (DL_FUNC) &_BTM_btm, 12},
     {"_BTM_btm_infer", (DL_FUNC) &_BTM_btm_infer, 3},
     {"_BTM_btm_biterms", (DL_FUNC) &_BTM_btm_biterms, 1},
     {"_BTM_btm_biterms_text", (DL_FUNC) &_BTM_btm_biterms_text, 3},
+    {"_BTM_ibtm", (DL_FUNC) &_BTM_ibtm, 13},
+    {"_BTM_ibtm_biterms", (DL_FUNC) &_BTM_ibtm_biterms, 1},
     {"_BTM_obtm", (DL_FUNC) &_BTM_obtm, 14},
     {"_BTM_obtm_biterms", (DL_FUNC) &_BTM_obtm_biterms, 1},
     {NULL, NULL, 0}
