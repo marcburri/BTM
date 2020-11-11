@@ -86,40 +86,14 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// obtm_infer
-Rcpp::NumericMatrix obtm_infer(const Rcpp::List& OBTM, Rcpp::CharacterVector x, std::string type);
-RcppExport SEXP _BTM_obtm_infer(SEXP OBTMSEXP, SEXP xSEXP, SEXP typeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const Rcpp::List& >::type OBTM(OBTMSEXP);
-    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type x(xSEXP);
-    Rcpp::traits::input_parameter< std::string >::type type(typeSEXP);
-    rcpp_result_gen = Rcpp::wrap(obtm_infer(OBTM, x, type));
-    return rcpp_result_gen;
-END_RCPP
-}
 // obtm_biterms
-Rcpp::List obtm_biterms(SEXP obtm_model);
-RcppExport SEXP _BTM_obtm_biterms(SEXP obtm_modelSEXP) {
+Rcpp::List obtm_biterms(SEXP model);
+RcppExport SEXP _BTM_obtm_biterms(SEXP modelSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type obtm_model(obtm_modelSEXP);
-    rcpp_result_gen = Rcpp::wrap(obtm_biterms(obtm_model));
-    return rcpp_result_gen;
-END_RCPP
-}
-// obtm_biterms_text
-Rcpp::List obtm_biterms_text(Rcpp::CharacterVector x, int W, int win);
-RcppExport SEXP _BTM_obtm_biterms_text(SEXP xSEXP, SEXP WSEXP, SEXP winSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< Rcpp::CharacterVector >::type x(xSEXP);
-    Rcpp::traits::input_parameter< int >::type W(WSEXP);
-    Rcpp::traits::input_parameter< int >::type win(winSEXP);
-    rcpp_result_gen = Rcpp::wrap(obtm_biterms_text(x, W, win));
+    Rcpp::traits::input_parameter< SEXP >::type model(modelSEXP);
+    rcpp_result_gen = Rcpp::wrap(obtm_biterms(model));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -130,9 +104,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BTM_btm_biterms", (DL_FUNC) &_BTM_btm_biterms, 1},
     {"_BTM_btm_biterms_text", (DL_FUNC) &_BTM_btm_biterms_text, 3},
     {"_BTM_obtm", (DL_FUNC) &_BTM_obtm, 14},
-    {"_BTM_obtm_infer", (DL_FUNC) &_BTM_obtm_infer, 3},
     {"_BTM_obtm_biterms", (DL_FUNC) &_BTM_obtm_biterms, 1},
-    {"_BTM_obtm_biterms_text", (DL_FUNC) &_BTM_obtm_biterms_text, 3},
     {NULL, NULL, 0}
 };
 

@@ -71,8 +71,14 @@ SEXP obtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, d
           // gen biterms
           doc.gen_biterms(obtm->bs, win);
         }
+        for (int i = 0; i < doc.size(); ++i) {
+          int w = doc.get_w(i);
+          // the background word distribution
+          obtm->pw_b[w] += 1;
+        }
         // Rcpp::Rcout << "n(biterms)=" << obtm->bs.size() << endl;
       }
+      obtm->pw_b.normalize();
       obtm->model_init();
       // init model
       // for (vector<Biterm>::iterator b = obtm->bs.begin(); b != obtm->bs.end(); ++b) {
@@ -105,12 +111,6 @@ SEXP obtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, d
          Rcpp::checkUserInterrupt();
       }
       
-      
-      
-      
-      
-      
-      
     }
   // p(z) is determinated by the overall proportions
   // of biterms in it
@@ -138,7 +138,7 @@ SEXP obtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, d
  // Rcpp::Rcout << "n(biterms)=" << obtm->bs.size() << endl;
 
   Rcpp::List out = Rcpp::List::create(
-    Rcpp::Named("OBTM") = obtm,
+    Rcpp::Named("model") = obtm,
     Rcpp::Named("K") = K,
     Rcpp::Named("W") = W,
     Rcpp::Named("alpha") = a,
@@ -151,46 +151,9 @@ SEXP obtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, d
   return out;
 }
 
-
 // [[Rcpp::export]]
-Rcpp::NumericMatrix obtm_infer(const Rcpp::List & OBTM, Rcpp::CharacterVector x, std::string type) {
-  int K = Rcpp::as<int>(OBTM["K"]);
-  int W = Rcpp::as<int>(OBTM["W"]);
-  Rcpp::NumericVector theta = Rcpp::as<Rcpp::NumericVector>(OBTM["theta"]);
-  Rcpp::NumericMatrix phi = Rcpp::as<Rcpp::NumericMatrix>(OBTM["phi"]);
-  Rcpp::NumericMatrix scores(x.size(), K);
-
-  Pvec<double> pz(K);
-  Pmat<double> pw_z(K, W);
-  for (int i = 0; i < theta.size(); ++i){
-    pz[i] = theta(i);
-  }
-  for (int k = 0; k < K; k++) {
-    for (int w = 0; w < W; w++){
-      pw_z[k][w] = phi(w, k);
-    }
-  }
-  Infer inf(type, K);
-  inf.pz = pz;
-  inf.pw_z = pw_z;
-  std::string line;
-  for (int idx = 0; idx < x.size(); idx++){
-    line = Rcpp::as<std::string>(x[idx]);
-    Doc doc(line);
-    Pvec<double> pz_d(K);
-    inf.doc_infer(doc, pz_d);
-    for (int k = 0; k < K; k++) {
-      scores(idx, k) = pz_d[k];
-    }
-  }
-  return(scores);
-}
-
-
-
-// [[Rcpp::export]]
-Rcpp::List obtm_biterms(SEXP obtm_model) {
-  Rcpp::XPtr<OBTM> obtm(obtm_model);
+Rcpp::List obtm_biterms(SEXP model) {
+  Rcpp::XPtr<OBTM> obtm(model);
   unsigned int nr_biterms = obtm->bs.size();
   std::vector<int> term1;
   std::vector<int> term2;
@@ -211,49 +174,3 @@ Rcpp::List obtm_biterms(SEXP obtm_model) {
   return out;
 }
 
-
-
-// [[Rcpp::export]]
-Rcpp::List obtm_biterms_text(Rcpp::CharacterVector x, int W, int win = 15) {
-  int K = 5;
-  double a = 50/5;
-  double b = 0.01;
-  int lam = 1;
-  int iter = 1;
-
-
-  Rcpp::CharacterVector doc_ids = x.attr("names");
-  std::string context_id;
-
-  Rcpp::XPtr<OBTM> obtm(new OBTM(K, W, a, b, iter, lam), true);
-  std::string line;
-
-  for (int idx = 0; idx < x.size(); idx++){
-    line = Rcpp::as<std::string>(x[idx]);
-    context_id = Rcpp::as<std::string>(doc_ids[idx]);
-    Doc doc(line);
-    doc.gen_biterms(obtm->bs, win);
-    for (int i = 0; i < doc.size(); ++i) {
-      int w = doc.get_w(i);
-      // the background word distribution
-      //obtm->pw_b[w] += 1;
-    }
-  }
-  //obtm->pw_b.normalize();
-
-  unsigned int nr_biterms = obtm->bs.size();
-  std::vector<int> term1;
-  std::vector<int> term2;
-  for (unsigned int i = 0; i < nr_biterms; i++){
-    term1.push_back(obtm->bs[i].get_wi() + 1);
-    term2.push_back(obtm->bs[i].get_wj() + 1);
-  }
-  Rcpp::List out = Rcpp::List::create(
-    Rcpp::Named("n") = nr_biterms,
-    Rcpp::Named("biterms") = Rcpp::List::create(
-      Rcpp::Named("term1") = term1,
-      Rcpp::Named("term2") = term2
-    )
-  );
-  return out;
-}

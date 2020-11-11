@@ -90,10 +90,49 @@ OBTM <- function(data, k = 5, a = 50/k, b = 0.01, iter = 1000,
   ## make sure integer numbers are back tokens again
   rownames(model$phi) <- vocabulary$token
   ## also include vocabulary
-  class(model) <- "BTM"
+  class(model) <- "OBTM"
   if(detailed){
     model$vocabulary <- vocabulary[c("token", "freq")]
     model$biterms <- terms.BTM(model, type = "biterms")
   }
   model
+}
+
+
+#' @export
+terms.OBTM <- function(x, type = c("tokens", "biterms"), threshold = 0, top_n = 5, ...){
+  type <- match.arg(type)
+  if(type %in% "biterms"){
+    from         <- seq_along(rownames(x$phi))
+    to           <- rownames(x$phi)
+    bit <- obtm_biterms(x$model)
+    bit$biterms$term1 <- to[match(bit$biterms$term1, from)]
+    bit$biterms$term2 <- to[match(bit$biterms$term2, from)]
+    bit$biterms <- data.frame(term1 = bit$biterms$term1,
+                              term2 = bit$biterms$term2,
+                              topic = bit$biterms$topic, stringsAsFactors = FALSE)
+    bit <- bit[c("n", "biterms")]
+    bit
+  }else if(type == "tokens"){
+    apply(x$phi, MARGIN=2, FUN=function(x){
+      x <- data.frame(token = names(x), probability = x)
+      x <- x[x$probability >= threshold, ]
+      x <- x[order(x$probability, decreasing = TRUE), ]
+      rownames(x) <- NULL
+      head(x, top_n)
+    })
+  }
+}
+
+
+#' @export
+logLik.OBTM <- function(object, data = terms.OBTM(object, type = 'biterms')$biterms, ...){
+  stopifnot(inherits(data, "data.frame"))
+  stopifnot(all(c(data[[1]], data[[2]]) %in% rownames(object$phi)))
+  lik <- mapply(w1 = data[[1]],
+                w2 = data[[2]],
+                FUN = function(w1, w2){
+                  sum(object$phi[w1, ] * object$phi[w2, ] * object$theta)
+                })
+  list(likelihood = lik, ll = sum(log(lik)))
 }

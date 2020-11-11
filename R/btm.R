@@ -107,9 +107,9 @@
 #'
 #' bitermset$n
 #' sum(biterms$cooc)
-#' }
-#'
 #' \dontshow{\} # End of main if statement running only if the required packages are installed}
+#' }
+#' \dontrun{
 #' ##
 #' ## Visualisation either using the textplot or the LDAvis package
 #' ##
@@ -327,7 +327,7 @@ terms.BTM <- function(x, type = c("tokens", "biterms"), threshold = 0, top_n = 5
   if(type %in% "biterms"){
     from         <- seq_along(rownames(x$phi))
     to           <- rownames(x$phi)
-    bit <- btm_biterms(x$OBTM)
+    bit <- btm_biterms(x$model)
     bit$biterms$term1 <- to[match(bit$biterms$term1, from)]
     bit$biterms$term2 <- to[match(bit$biterms$term2, from)]
     bit$biterms <- data.frame(term1 = bit$biterms$term1,

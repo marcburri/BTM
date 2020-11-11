@@ -91,6 +91,75 @@ A biterm is an unorder word pair where \code{'B C' = 'C B'}. Thus, the document 
 }
 These biterms are used to create the model.
 }
+\examples{
+\dontrun{
+\dontshow{if(require(udpipe) & require(data.table))\{}
+library(udpipe)
+data("brussels_reviews_anno", package = "udpipe")
+x <- subset(brussels_reviews_anno, language == "nl")
+x <- subset(x, xpos \%in\% c("NN", "NNP", "NNS"))
+x <- x[, c("doc_id", "lemma")]
+model  <- BTM(x, k = 5, a = 1, b = 0.01, iter = 10, trace = TRUE)
+model
+terms(model)
+scores <- predict(model, newdata = x)
+
+## Another small run with first topic the background word distribution
+set.seed(123456)
+model <- BTM(x, k = 5, b = 0.01, iter = 10, background = TRUE)
+model
+terms(model)
+
+##
+## You can also provide your own set of biterms to cluster upon
+## Example: cluster nouns and adjectives in the neighbourhood of one another
+##
+library(data.table)
+library(udpipe)
+x <- subset(brussels_reviews_anno, language == "nl")
+x <- head(x, 5500) # take a sample to speed things up on CRAN
+biterms <- as.data.table(x)
+biterms <- biterms[, cooccurrence(x = lemma,
+                                  relevant = xpos \%in\% c("NN", "NNP", "NNS", "JJ"),
+                                  skipgram = 2),
+                   by = list(doc_id)]
+head(biterms)
+set.seed(123456)
+x <- subset(x, xpos \%in\% c("NN", "NNP", "NNS", "JJ"))
+x <- x[, c("doc_id", "lemma")]
+model <- BTM(x, k = 5, b = 0.01, iter = 10, background = TRUE,
+             biterms = biterms, trace = 10, detailed = TRUE)
+model
+terms(model)
+bitermset <- terms(model, "biterms")
+head(bitermset$biterms, 100)
+
+bitermset$n
+sum(biterms$cooc)
+\dontshow{\} # End of main if statement running only if the required packages are installed}
+}
+\dontrun{
+##
+## Visualisation either using the textplot or the LDAvis package
+##
+library(textplot)
+library(ggraph)
+library(concaveman)
+plot(model, top_n = 4)
+
+library(LDAvis)
+docsize <- table(x$doc_id)
+scores  <- predict(model, x)
+scores  <- scores[names(docsize), ]
+json <- createJSON(
+  phi = t(model$phi),
+  theta = scores,
+  doc.length = as.integer(docsize),
+  vocab = model$vocabulary$token,
+  term.frequency = model$vocabulary$freq)
+serVis(json)
+}
+}
 \references{
 Xiaohui Yan, Jiafeng Guo, Yanyan Lan, Xueqi Cheng. A Biterm Topic Model For Short Text. WWW2013,
 \url{https://github.com/xiaohuiyan/BTM}, \url{https://github.com/xiaohuiyan/xiaohuiyan.github.io/blob/master/paper/BTM-WWW13.pdf}
