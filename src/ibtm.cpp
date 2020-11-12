@@ -93,10 +93,19 @@ void IBTM::proc_part(string pt) {
 	vector<Biterm> bis;
 	doc.gen_biterms(bis);
 
-    for (int b = 0; b < bis.size(); ++b)
+    for (int b = 0; b < bis.size(); ++b){
       proc_biterm(bis[b]);
-
+    }
+    
 	++n_d;
+  }
+}
+
+// random initialize
+void IBTM::model_init() {
+  for (vector<Biterm>::iterator b = bs.begin(); b != bs.end(); ++b) {
+    int k = Sampler::uni_sample(K);
+    assign_biterm_topic(*b, k);
   }
 }
 
@@ -111,12 +120,12 @@ void IBTM::proc_biterm(Biterm& bi) {
 	update_biterm(bs[idxs[i]]);
 
   // add to rejuvenated list
-  if (bs.size() < win) {
+  if (bs.size() < win_nrej) {
 	bs.push_back(bi);
   }
   else {
-	assert( bs.size() == win );
-	bs[n_b % win] = bi;
+	assert( bs.size() == win_nrej );
+	bs[n_b % win_nrej] = bi;
   }
 
   // update the biterm counter

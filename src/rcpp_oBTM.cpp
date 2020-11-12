@@ -15,7 +15,20 @@
 using namespace std;
 
 // [[Rcpp::export]]
-SEXP obtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, double b, int iter, int win = 15, double lam = 1, int n_part = 10,int trace = 0, int check_convergence = 0, double convergence_tol = 0.001, bool background = false) {
+SEXP obtm(Rcpp::List biterms, 
+          Rcpp::CharacterVector x, 
+          int K, 
+          int W, 
+          double a, 
+          double b, 
+          int iter, 
+          int win = 15, 
+          double lam = 1, 
+          int n_part = 10,
+          int trace = 0, 
+          int check_convergence = 0, 
+          double convergence_tol = 0.001, 
+          bool background = false) {
   Rcpp::Function format_posixct("format.POSIXct");
   Rcpp::Function sys_time("Sys.time");
   int biterms_size = biterms.size();

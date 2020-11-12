@@ -1,7 +1,7 @@
 
 #' @export
-IBTM <- function(data, k = 5, a = 50/k, b = 0.01, iter = 1000, 
-                 window = 15, n_rej=10, n_part = 10, trace = FALSE,
+IBTM <- function(data, k = 5, a = 50/k, b = 0.01,
+                 window = 15, win_nrej = 1000, n_rej=10, n_part = 10, trace = FALSE,
                  biterms, detailed = FALSE, check_convergence=0, 
                  convergence_tol=1e-5, background=FALSE){
   trace <- as.integer(trace)
@@ -80,18 +80,60 @@ IBTM <- function(data, k = 5, a = 50/k, b = 0.01, iter = 1000,
                 W = voc, 
                 a = a, 
                 b = b, 
-                iter = iter, 
+                #iter = iter, 
                 win = window, 
+                win_nrej = win_nrej,
                 n_rej = n_rej, 
                 n_part = n_part, 
-                trace = as.integer(trace))
+                trace = trace)
   ## make sure integer numbers are back tokens again
   rownames(model$phi) <- vocabulary$token
   ## also include vocabulary
-  class(model) <- "BTM"
+  class(model) <- "IBTM"
   if(detailed){
     model$vocabulary <- vocabulary[c("token", "freq")]
     model$biterms <- terms.BTM(model, type = "biterms")
   }
   model
 }
+
+
+
+#' @export
+terms.IBTM <- function(x, type = c("tokens", "biterms"), threshold = 0, top_n = 5, ...){
+  type <- match.arg(type)
+  if(type %in% "biterms"){
+    from         <- seq_along(rownames(x$phi))
+    to           <- rownames(x$phi)
+    bit <- ibtm_biterms(x$model)
+    bit$biterms$term1 <- to[match(bit$biterms$term1, from)]
+    bit$biterms$term2 <- to[match(bit$biterms$term2, from)]
+    bit$biterms <- data.frame(term1 = bit$biterms$term1,
+                              term2 = bit$biterms$term2,
+                              topic = bit$biterms$topic, stringsAsFactors = FALSE)
+    bit <- bit[c("n", "biterms")]
+    bit
+  }else if(type == "tokens"){
+    apply(x$phi, MARGIN=2, FUN=function(x){
+      x <- data.frame(token = names(x), probability = x)
+      x <- x[x$probability >= threshold, ]
+      x <- x[order(x$probability, decreasing = TRUE), ]
+      rownames(x) <- NULL
+      head(x, top_n)
+    })
+  }
+}
+
+
+#' @export
+logLik.IBTM <- function(object, data = terms.IBTM(object, type = 'biterms')$biterms, ...){
+  stopifnot(inherits(data, "data.frame"))
+  stopifnot(all(c(data[[1]], data[[2]]) %in% rownames(object$phi)))
+  lik <- mapply(w1 = data[[1]],
+                w2 = data[[2]],
+                FUN = function(w1, w2){
+                  sum(object$phi[w1, ] * object$phi[w2, ] * object$theta)
+                })
+  list(likelihood = lik, ll = sum(log(lik)))
+}
+

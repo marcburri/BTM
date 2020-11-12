@@ -6,6 +6,7 @@
 #ifndef _IBTM_H
 #define _IBTM_H
 
+#include <Rcpp.h>
 #include <string>
 #include <vector>
 
@@ -24,8 +25,8 @@ public:
   double alpha;			// hyperparameters of p(z)
   double beta;			// hyperparameters of p(w|z)
 
+  int win_nrej;		// size of the biterm sliding window
   int n_rej;	// number of biterms to rejuvenate
-  int win;		// size of the biterm sliding window
   long n_b;		// number of biterms processed
 
   // sample recorders
@@ -39,11 +40,12 @@ public:
   Pvec<double> pw_b;   // the background word distribution  
   
 public:
-  IBTM(int K, int W, double a, double b, int win,  int n_iter, int n_rej, bool has_b = false):
-  K(K), W(W), n_iter(n_iter), alpha(a), beta(b),
-  win(win), n_rej(n_rej), n_b(0) , has_background(has_b) {  
+  IBTM(int K, int W, double a, double b, int win_nrej, int n_rej, bool has_b = false):
+  K(K), W(W),  alpha(a), beta(b),
+  win_nrej(win_nrej), n_rej(n_rej), n_b(0) , has_background(has_b) {  
     nb_z.resize(K);
     nwz.resize(K, W);
+    pw_b.resize(W);
   }
   
   Rcpp::NumericVector split(int x, int n);
@@ -51,6 +53,8 @@ public:
   void run(string input_dir, int n_day, string res_dir);
   
   void proc_part(string pt);
+  
+  void model_init();
   
 // private:
   void proc_biterm(Biterm& bi);
