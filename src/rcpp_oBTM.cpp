@@ -88,13 +88,13 @@ SEXP obtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, d
       double inf = std::numeric_limits<double>::infinity();
       double loglik_old = -inf;
       for (int it = 1; it < iter + 1; ++it) {
+        for (unsigned int b = 0; b < obtm->bs.size(); ++b) {
+           obtm->update_biterm(obtm->bs[b]);
+        }
         if(trace > 0){
           if ((it) % trace == 0){
             Rcpp::Rcout << Rcpp::as<std::string>(format_posixct(sys_time())) << " End of GS iteration " << it << "/" << iter << endl;
           }
-        }
-        for (unsigned int b = 0; b < obtm->bs.size(); ++b) {
-           obtm->update_biterm(obtm->bs[b]);
         }
         if(check_convergence > 0){
           if ((it) % check_convergence == 0){

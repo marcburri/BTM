@@ -19,6 +19,7 @@ class IBTM {
 public:
   int K;				// topic number
   int W;				// vocabulary size
+  int n_iter;			// maximum number of iteration of Gibbs Sampling
 
   double alpha;			// hyperparameters of p(z)
   double beta;			// hyperparameters of p(w|z)
@@ -38,13 +39,14 @@ public:
   Pvec<double> pw_b;   // the background word distribution  
   
 public:
-  IBTM(int K, int W, double a, double b, int win, int n_rej, bool has_b = false):
-  K(K), W(W), alpha(a), beta(b),
+  IBTM(int K, int W, double a, double b, int win,  int n_iter, int n_rej, bool has_b = false):
+  K(K), W(W), n_iter(n_iter), alpha(a), beta(b),
   win(win), n_rej(n_rej), n_b(0) , has_background(has_b) {  
     nb_z.resize(K);
     nwz.resize(K, W);
   }
   
+  Rcpp::NumericVector split(int x, int n);
   
   void run(string input_dir, int n_day, string res_dir);
   

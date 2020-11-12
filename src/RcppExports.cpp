@@ -65,8 +65,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // ibtm
-SEXP ibtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, double b, int iter, int win, int n_rej, int trace, int check_convergence, double convergence_tol, bool background);
-RcppExport SEXP _BTM_ibtm(SEXP bitermsSEXP, SEXP xSEXP, SEXP KSEXP, SEXP WSEXP, SEXP aSEXP, SEXP bSEXP, SEXP iterSEXP, SEXP winSEXP, SEXP n_rejSEXP, SEXP traceSEXP, SEXP check_convergenceSEXP, SEXP convergence_tolSEXP, SEXP backgroundSEXP) {
+SEXP ibtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, double b, int iter, int win, int n_part, int n_rej, int trace, int check_convergence, double convergence_tol, bool background);
+RcppExport SEXP _BTM_ibtm(SEXP bitermsSEXP, SEXP xSEXP, SEXP KSEXP, SEXP WSEXP, SEXP aSEXP, SEXP bSEXP, SEXP iterSEXP, SEXP winSEXP, SEXP n_partSEXP, SEXP n_rejSEXP, SEXP traceSEXP, SEXP check_convergenceSEXP, SEXP convergence_tolSEXP, SEXP backgroundSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -78,12 +78,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type b(bSEXP);
     Rcpp::traits::input_parameter< int >::type iter(iterSEXP);
     Rcpp::traits::input_parameter< int >::type win(winSEXP);
+    Rcpp::traits::input_parameter< int >::type n_part(n_partSEXP);
     Rcpp::traits::input_parameter< int >::type n_rej(n_rejSEXP);
     Rcpp::traits::input_parameter< int >::type trace(traceSEXP);
     Rcpp::traits::input_parameter< int >::type check_convergence(check_convergenceSEXP);
     Rcpp::traits::input_parameter< double >::type convergence_tol(convergence_tolSEXP);
     Rcpp::traits::input_parameter< bool >::type background(backgroundSEXP);
-    rcpp_result_gen = Rcpp::wrap(ibtm(biterms, x, K, W, a, b, iter, win, n_rej, trace, check_convergence, convergence_tol, background));
+    rcpp_result_gen = Rcpp::wrap(ibtm(biterms, x, K, W, a, b, iter, win, n_part, n_rej, trace, check_convergence, convergence_tol, background));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -139,7 +140,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_BTM_btm_infer", (DL_FUNC) &_BTM_btm_infer, 3},
     {"_BTM_btm_biterms", (DL_FUNC) &_BTM_btm_biterms, 1},
     {"_BTM_btm_biterms_text", (DL_FUNC) &_BTM_btm_biterms_text, 3},
-    {"_BTM_ibtm", (DL_FUNC) &_BTM_ibtm, 13},
+    {"_BTM_ibtm", (DL_FUNC) &_BTM_ibtm, 14},
     {"_BTM_ibtm_biterms", (DL_FUNC) &_BTM_ibtm_biterms, 1},
     {"_BTM_obtm", (DL_FUNC) &_BTM_obtm, 14},
     {"_BTM_obtm_biterms", (DL_FUNC) &_BTM_obtm_biterms, 1},

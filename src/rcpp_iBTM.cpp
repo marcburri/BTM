@@ -15,7 +15,7 @@
 using namespace std;
 
 // [[Rcpp::export]]
-SEXP ibtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, double b, int iter, int win = 15, int n_rej = 20, int trace = 0, int check_convergence = 0, double convergence_tol = 0.001, bool background = false) {
+SEXP ibtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, double b, int iter, int win = 15, int n_part = 10, int n_rej = 20, int trace = 0, int check_convergence = 0, double convergence_tol = 0.001, bool background = false) {
   Rcpp::Function format_posixct("format.POSIXct");
   Rcpp::Function sys_time("Sys.time");
   int biterms_size = biterms.size();
@@ -27,10 +27,24 @@ SEXP ibtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, d
   Rcpp::IntegerVector term2;
   Rcpp::IntegerVector cooc;
   
-  Rcpp::XPtr<IBTM> ibtm(new IBTM(K, W, a, b, win, n_rej, has_background), true);
+  Rcpp::XPtr<IBTM> ibtm(new IBTM(K, W, a, b, iter, win, n_rej, has_background), true);
   std::string line;
   
-  for (int idx = 0; idx < x.size(); idx++){ 
+  Rcpp::NumericVector arru(n_part);
+  arru = ibtm->split(x.size(),n_part);
+  
+  Rcpp::NumericVector arrl(n_part);
+  
+  int h = 0;
+  for (int d = 0; d < n_part+1; ++d) {
+    arrl[d] = h;
+    h = arru[d] + 1;
+    arru[d+1] += arru[d] ;
+  }
+  for (int d = 0; d < n_part; ++d) {
+    vector<Biterm> bis;
+    Rcpp::Rcout << "Processing from doc " << arrl[d] <<  " to " << arru[d] << endl;
+    for (int idx = arrl[d]; idx < arru[d]; idx++){
       line = Rcpp::as<std::string>(x[idx]);
       context_id = Rcpp::as<std::string>(doc_ids[idx]);
       Doc doc(line);
@@ -42,15 +56,15 @@ SEXP ibtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, d
         for (int j = 0; j < term1.size(); j++){
           if(cooc.length() > 0){
             for (int nr = 0; nr < cooc[j]; nr++){
-              ibtm->bs.push_back( Biterm(term1[j], term2[j]) );
+              bis.push_back( Biterm(term1[j], term2[j]) );
             }
           }else{
-            ibtm->bs.push_back( Biterm(term1[j], term2[j]) );
+            bis.push_back( Biterm(term1[j], term2[j]) );
           }
         }
       }else{
         // gen biterms
-        doc.gen_biterms(ibtm->bs, win);
+        doc.gen_biterms(bis, win);
       }
       for (int i = 0; i < doc.size(); ++i) {
         int w = doc.get_w(i);
@@ -66,32 +80,53 @@ SEXP ibtm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double a, d
     //   int k = Sampler::uni_sample(K);
     //   ibtm->assign_biterm_topic(*b, k);
     // }
-    double inf = std::numeric_limits<double>::infinity();
-    double loglik_old = -inf;
-    for (int it = 1; it < iter + 1; ++it) {
-      if(trace > 0){
-        if ((it) % trace == 0){
-          Rcpp::Rcout << Rcpp::as<std::string>(format_posixct(sys_time())) << " End of GS iteration " << it << "/" << iter << endl;
-        }
-      }
-      for (unsigned int b = 0; b < ibtm->bs.size(); ++b) {
-        ibtm->update_biterm(ibtm->bs[b]);
-      }
-      if(check_convergence > 0){
-        if ((it) % check_convergence == 0){
-          double loglik = ibtm -> loglik();
-          Rcpp::Rcout << " Loglik: " <<  loglik << endl;
-          if (loglik_old/loglik - 1 < convergence_tol) {
-            Rcpp::Rcout << " Achieved convergence after " << it << "/" << iter << " iterations " << endl;
-            break;
-          }
-          loglik_old = loglik;
-        }
-      }
       
-      Rcpp::checkUserInterrupt();
+      for (int b = 0; b < bis.size(); ++b) {
+        ibtm->update_biterm(bis[b]);
+        double inf = std::numeric_limits<double>::infinity();
+        double loglik_old = -inf;
+        
+        // rejuvenate
+        vector<int> idxs;
+        ibtm->gen_rej_idx(idxs);
+        
+        // for (int i = 0; i < idxs.size(); ++i)
+        for (int it = 0; it < iter; ++it) {
+          ibtm->update_biterm(ibtm->bs[idxs[it]]);
+          
+          if(trace > 0){
+            if ((it) % trace == 0){
+              Rcpp::Rcout << Rcpp::as<std::string>(format_posixct(sys_time())) << " End of GS iteration " << it << "/" << iter << endl;
+            }
+          }
+          if(check_convergence > 0){
+            if ((it) % check_convergence == 0){
+              double loglik = ibtm -> loglik();
+              Rcpp::Rcout << " Loglik: " <<  loglik << endl;
+              if (loglik_old/loglik - 1 < convergence_tol) {
+                Rcpp::Rcout << " Achieved convergence after " << it << "/" << iter << " iterations " << endl;
+                break;
+              }
+              loglik_old = loglik;
+            }
+          }
+          
+          Rcpp::checkUserInterrupt();
+        }
+        
+        // add to rejuvenated list
+        if ( ibtm->bs.size() < win) {
+          ibtm->bs.push_back(bis[b]);
+        }
+        else {
+          assert( bs.size() == win );
+          ibtm->bs[ ibtm->n_b % win] = bis[b];
+        }
+        
+        // update the biterm counter
+        ibtm->n_b+=1;
+      }
     }
-    
   // p(z) is determinated by the overall proportions
   // of biterms in it
   Pvec<double> pz(K);	          // p(z) = theta

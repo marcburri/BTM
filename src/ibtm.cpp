@@ -8,6 +8,55 @@
 #include "doc.h"
 #include "ibtm.h"
 
+
+// Function that prints
+// the required sequence
+Rcpp::NumericVector IBTM::split(int x, int n) 
+{
+  // int* arr = new int[n];
+  Rcpp::NumericVector arr(n);
+  // If we cannot split the
+  // number into exactly 'N' parts
+  if(x < n) {
+    //cout<<"-1"<<" ";
+    arr[1] = x;
+  }
+  // If x % n == 0 then the minimum
+  // difference is 0 and all
+  // numbers are x / n
+  else if (x % n == 0)
+  {
+    for(int i=0;i<n;i++) {
+      //cout<<(x/n)<<" ";
+      arr[i] = x/n;
+    }
+  }
+  else
+  {
+    
+    // upto n-(x % n) the values
+    // will be x / n
+    // after that the values
+    // will be x / n + 1
+    int zp = n - (x % n);
+    int pp = x/n;
+    for(int i=0;i<n;i++)
+    {
+      
+      if(i>= zp) {
+        //cout<<(pp + 1)<<" ";
+        arr[i] = pp+1;
+      }
+      else{
+        //cout<<pp<<" ";
+        arr[i] = pp;
+      }
+    }
+  }
+  return arr;
+}
+
+
 /**
  *   input_dir    contains docs orangnized by days start from 0,
  *                as day0.doc_wids, day1.day_wids, day2.day_wids, ...
@@ -122,8 +171,14 @@ void IBTM::compute_pz_b(Biterm& bi, Pvec<double>& pz) {
 
   double pw1k, pw2k;
   for (int k = 0; k < K; ++k) {
-	pw1k = (nwz[k][w1] + beta) / (2 * nb_z[k] + W * beta);
-	pw2k = (nwz[k][w2] + beta) / (2 * nb_z[k] + 1 + W * beta);
+    if (has_background && k == 0) {
+      pw1k = pw_b[w1];
+      pw2k = pw_b[w2];
+    }
+    else {
+      pw1k = (nwz[k][w1] + beta) / (2 * nb_z[k] + W * beta);
+      pw2k = (nwz[k][w2] + beta) / (2 * nb_z[k] + 1 + W * beta);
+    }
 	pz[k] = (nb_z[k] + alpha) * pw1k * pw2k;
   }
   pz.normalize();

@@ -204,8 +204,8 @@ void OBTM::compute_pz_b(Biterm& bi, Pvec<double>& pz) {
     else {
 	pw1k = (nwz[k][w1] + beta[k][w1]) / (2 * nb_z[k] + beta_sum[k]);
 	pw2k = (nwz[k][w2] + beta[k][w2]) / (2 * nb_z[k] + 1 + beta_sum[k]);
-	pz[k] = (nb_z[k] + alpha[k]) * pw1k * pw2k;
     }
+    pz[k] = (nb_z[k] + alpha[k]) * pw1k * pw2k;
   }
   pz.normalize();
 }

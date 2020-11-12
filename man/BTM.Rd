@@ -13,6 +13,8 @@ BTM(
   window = 15,
   background = FALSE,
   trace = FALSE,
+  check_convergence = 0,
+  convergence_tol = 1e-05,
   biterms,
   detailed = FALSE
 )
