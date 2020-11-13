@@ -62,8 +62,8 @@ SEXP btm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double alpha
   double loglik_old = -inf;
   for (int it = 1; it < iter + 1; ++it) {
     if(trace > 0){
-      if ((it-1) % trace == 0){
-        Rcpp::Rcout << Rcpp::as<std::string>(format_posixct(sys_time())) << " Start Gibbs sampling iteration " << it << "/" << iter << endl;
+      if ((it) % trace == 0){
+        Rcpp::Rcout << Rcpp::as<std::string>(format_posixct(sys_time())) << " End of GS iteration " << it << "/" << iter << endl;
       }
     }
     for (unsigned int b = 0; b < model->bs.size(); ++b) {
@@ -98,6 +98,26 @@ SEXP btm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double alpha
       pw_z(w, k) = (model->nwz[k][w] + beta) / (model->nb_z[k] * 2 + W * beta);
     }
   }
+  
+  Rcpp::NumericMatrix gamma(x.size(), K);
+  for (int idx = 0; idx < x.size(); idx++){
+    line = Rcpp::as<std::string>(x[idx]);
+    Doc doc(line);
+    for (int k = 0; k < K; k++) {
+    for (int i = 0; i < doc.size(); ++i) {
+      int w = doc.get_w(i);
+      gamma(idx, k) += pw_z(w,k);
+    }
+  } 
+  }
+  Rcpp::NumericVector gamma_rs = Rcpp::rowSums(gamma);
+  for (int idx = 0; idx < x.size(); idx++){
+    for (int k = 0; k < K; k++) {
+    gamma(idx, k) = gamma(idx, k) / gamma_rs(idx);
+    }
+  }
+  
+  
   Rcpp::List out = Rcpp::List::create(
     Rcpp::Named("model") = model,
     Rcpp::Named("K") = K,
@@ -107,7 +127,8 @@ SEXP btm(Rcpp::List biterms, Rcpp::CharacterVector x, int K, int W, double alpha
     Rcpp::Named("iter") = iter,
     Rcpp::Named("background") = background,
     Rcpp::Named("theta") = p_z,
-    Rcpp::Named("phi") = pw_z
+    Rcpp::Named("phi") = pw_z,
+    Rcpp::Named("gamma") = gamma
   );
   return out;
 }
