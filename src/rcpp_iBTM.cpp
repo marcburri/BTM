@@ -92,60 +92,7 @@ SEXP ibtm(Rcpp::List biterms,
       // Rcpp::Rcout << "n(biterms)=" << ibtm->bs.size() << endl;
     }
   }
-    // ibtm->pw_b.normalize();
-    // ibtm->model_init(); 
-    // init model
-    // for (vector<Biterm>::iterator b = ibtm->bs.begin(); b != ibtm->bs.end(); ++b) {
-    //   int k = Sampler::uni_sample(K);
-    //   ibtm->assign_biterm_topic(*b, k);
-    // }
-      
-      // for (int b = 0; b < bis.size(); ++b) {
-      //   ibtm->update_biterm(bis[b]);
-      //   
-      //   double inf = std::numeric_limits<double>::infinity();
-      //   double loglik_old = -inf;
-      // 
-      //   // rejuvenate
-      //   vector<int> idxs;
-      //   ibtm->gen_rej_idx(idxs);
-      // 
-      //   for (int i = 0; i < idxs.size(); ++i){
-      //     ibtm->update_biterm(ibtm->bs[idxs[i]]);
-      //   }
-      // 
-      //     // if(trace > 0){
-      //     //   if ((it) % trace == 0){
-      //     //     Rcpp::Rcout << Rcpp::as<std::string>(format_posixct(sys_time())) << " End of GS iteration " << it << "/" << iter << endl;
-      //     //   }
-      //     // }
-      //     // if(check_convergence > 0){
-      //     //   if ((it) % check_convergence == 0){
-      //     //     double loglik = ibtm -> loglik();
-      //     //     Rcpp::Rcout << " Loglik: " <<  loglik << endl;
-      //     //     if (loglik_old/loglik - 1 < convergence_tol) {
-      //     //       Rcpp::Rcout << " Achieved convergence after " << it << "/" << iter << " iterations " << endl;
-      //     //       break;
-      //     //     }
-      //     //     loglik_old = loglik;
-      //     //   }
-      //     // }
-      // 
-      //     Rcpp::checkUserInterrupt();
-      //   
-      //   // add to rejuvenated list
-      //   if ( ibtm->bs.size() < win_nrej) {
-      //     ibtm->bs.push_back(bis[b]);
-      //   }
-      //   else {
-      //     assert( bs.size() == win_nrej );
-      //     ibtm->bs[ ibtm->n_b % win_nrej] = bis[b];
-      //   }
-      //   
-      //   // update the biterm counter
-      //   ibtm->n_b+=1;
-      //   }
-   // }
+
   // p(z) is determinated by the overall proportions
   // of biterms in it
   Pvec<double> pz(K);	          // p(z) = theta
@@ -169,7 +116,24 @@ SEXP ibtm(Rcpp::List biterms,
     }
   }
   
-  // Rcpp::Rcout << "n(biterms)=" << ibtm->bs.size() << endl;
+  Rcpp::NumericMatrix gamma(x.size(), K);
+  for (int idx = 0; idx < x.size(); idx++){
+    line = Rcpp::as<std::string>(x[idx]);
+    Doc doc(line);
+    for (int k = 0; k < K; k++) {
+      for (int i = 0; i < doc.size(); ++i) {
+        int w = doc.get_w(i);
+        gamma(idx, k) += pwz(w,k);
+      }
+    } 
+  }
+  Rcpp::NumericVector gamma_rs = Rcpp::rowSums(gamma);
+  for (int idx = 0; idx < x.size(); idx++){
+    for (int k = 0; k < K; k++) {
+      gamma(idx, k) = gamma(idx, k) / gamma_rs(idx);
+    }
+  }
+  
   
   Rcpp::List out = Rcpp::List::create(
     Rcpp::Named("model") = ibtm,
@@ -179,7 +143,8 @@ SEXP ibtm(Rcpp::List biterms,
     Rcpp::Named("beta") = b,
    // Rcpp::Named("iter") = iter,
     Rcpp::Named("theta") = p_z,
-    Rcpp::Named("phi") = pwz
+    Rcpp::Named("phi") = pwz,
+    Rcpp::Named("gamma") = gamma
   );
   return out;
 }

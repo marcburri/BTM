@@ -148,7 +148,24 @@ SEXP obtm(Rcpp::List biterms,
       }
     }
 
- // Rcpp::Rcout << "n(biterms)=" << obtm->bs.size() << endl;
+    Rcpp::NumericMatrix gamma(x.size(), K);
+    for (int idx = 0; idx < x.size(); idx++){
+      line = Rcpp::as<std::string>(x[idx]);
+      Doc doc(line);
+      for (int k = 0; k < K; k++) {
+        for (int i = 0; i < doc.size(); ++i) {
+          int w = doc.get_w(i);
+          gamma(idx, k) += pwz(w,k);
+        }
+      } 
+    }
+    Rcpp::NumericVector gamma_rs = Rcpp::rowSums(gamma);
+    for (int idx = 0; idx < x.size(); idx++){
+      for (int k = 0; k < K; k++) {
+        gamma(idx, k) = gamma(idx, k) / gamma_rs(idx);
+      }
+    }
+    
 
   Rcpp::List out = Rcpp::List::create(
     Rcpp::Named("model") = obtm,
@@ -159,7 +176,8 @@ SEXP obtm(Rcpp::List biterms,
     Rcpp::Named("iter") = iter,
     Rcpp::Named("lambda") = lam,
     Rcpp::Named("theta") = p_z,
-    Rcpp::Named("phi") = pwz
+    Rcpp::Named("phi") = pwz,
+    Rcpp::Named("gamma") = gamma
   );
   return out;
 }
